@@ -1,0 +1,633 @@
+{% load static %} {% load common %}
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+{% include 'head.html' %}
+
+<body>
+    <div class="splash active">
+        <div class="splash-icon"></div>
+    </div>
+
+    <div class="wrapper">
+
+        {% include 'sidebar.html' %}
+
+
+        <div class="main">
+            {% include 'header.html' %}
+            <main class="content">
+                <div class="container-fluid">
+
+                    <div class="header">
+                        <h1 class="header-title">
+                            Employee Auditing
+                            <button type="button" class="btn btn-primary" id="preview">
+                                Launch demo modal
+                              </button>
+                        </h1>
+
+                    </div>
+                    <div class="row">
+
+
+                        <!-- Button trigger modal -->
+
+  
+  <!-- Modal -->
+  <div class="modal fade" id="showPreview" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Preview contents</h5>
+          <button type="button" class="closePreview" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <img src="https://via.placeholder.com/550x300"  style="height:550px; width:500px;" id="previewImage" alt="Preview Image">
+          <p id ="perviewText" >Here's some text for the description</p>
+
+        </div>
+        <div class="modal-footer">
+          
+          <button type="button" class="btn btn-secondary closePreview">Close</button>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+  
+                        <div id="myModal" class="modal fade" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Tracker Description</h5>
+                                        <input type="hidden" id="current_choice" name="custId" value="">
+                                        <button type="button" class="close btn-h" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        
+                                        <form>
+                                            <div class="row">
+                                                <div class="col-md-10">
+
+                                                    <div class="text-center display-6 mb-3 ">
+                                                        <div id="employee_name"> 
+                                                            <h5 >Emoloyee Name</5>
+                                                        </div>
+
+				                                        	<small id="tracker_name">Tracker</small>
+                                                    </div>
+
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="inputUsername">Upload Image </label>
+                                                        <div class="mt-2">
+                                                            {% comment %} <span class="btn btn-primary"><i class="fas fa-upload"> </i> Upload</span> {% endcomment %}
+                                                            <input class="btn btn-primary fas fa-upload " type='file' id="readUrl">
+
+                                                        <img id="uploadedImage" src="#"  style="height:50px; width:100px"; alt="Uploaded Image" accept="image/png, image/jpeg" style="display:none;">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="inputUsername">Text Description</label>
+                                                        <textarea rows="2" class="form-control" id="inputDescription"
+                                                            placeholder="Tell something about yourself"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    
+                                                </div>
+                                            </div>
+
+                                            <button type="button" id="append_data" class="btn btn-primary">Save changes</button>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="close btn-h" class="btn btn-h btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <button type="button"  id="append_data" class="btn btn-primary">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-md-6 col-lg-3">
+                                            <label class="form-label">Criterion</label>
+                                            <div class="mb-3">
+
+                                                <select class="form-control select2" name="criterion" id="criterion" data-bs-toggle="select2">
+												
+												<optgroup label="Criterion">
+
+													{% for single in criterion  %}
+													<option value="{{single.id}}">{{single}}</option>
+													{% endfor %}
+												
+									
+												</optgroup>
+												
+											
+											</select>
+                                                <label class="form-label badge bg-success mt-3" id="criterion_display">Criterion</label>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-xs-12 col-md-6 col-lg-3">
+                                            <label class="form-label">Projects</label>
+                                            <div class="mb-3">
+
+                                                <select class="form-control select2" name="project" id="project" data-bs-toggle="select2">
+												
+												<optgroup label="Active Projects">
+                                                    <option value="0">All</option>
+													{% for single in project  %}
+                                                    
+													<option value="{{single.id}}">{{single}}</option>
+													{% endfor %}
+												
+													
+												</optgroup>
+												
+											
+											</select>
+                                                <label class="form-label badge bg-success mt-3" id="project_display">Projects</label>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-xs-12 col-md-6 col-lg-3">
+                                            <label class="form-label">Postion</label>
+                                            <div class="mb-3">
+
+                                                <select class="form-control select2" name="position" id="position" data-bs-toggle="select2">
+												
+												<optgroup label="Job Postion">
+                                                    <option value="0">All</option>
+													{% for single in position  %}
+													<option value="{{single.id}}">{{single}}</option>
+													{% endfor %}
+												
+													
+												</optgroup>
+												
+											
+											</select>
+                                                <label class="form-label badge bg-success mt-3" id="position_display">Position</label>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="col-xs-12 col-md-8 col-lg-2">
+                                            <label class="form-label">Action</label>
+                                            <div class="mb-3">
+
+                                                <button id="myBtn" class="btn btn-primary">Filter</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form action = "{% url 'audit_view_url'  %}" method = "post"  enctype="multipart/form-data" >
+                                        {% csrf_token %}
+                                        <input id="projectx" type="hidden" value="0" name="single_project">
+                                        <input id="positionx" type="hidden" value="0" name="single_position">
+                                        <input id="criterionx" type="hidden" value="0" name="single_criterion">
+                                        {% include 'message.html' %}
+                                    <div class="card-body" id="json_div">
+                                        
+                                        <div class="my-2">
+                                        
+                                              <button type="submit"   class="btn mb-1 btn-success"><i class="fas fa-check"></i> Insert</button>
+                                                <table id="datatables-clients" class="table table-striped" style="width:100%">
+                                                    
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Employee</th>
+
+                                                            {% for date in date_list %}
+                                                            <th>{{date|date:"D ,d M "}}</th>
+                                                            {% endfor %}
+
+
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                    
+                                                        {% for single in employee %}
+                                                        <tr>
+                                                            <td>{{forloop.counter}}</td> 
+                                                            <td>{{single}}</td>
+
+                                                            {% for date in date_list %}
+                                    
+                                                            
+                                                            <td>
+
+                                                                <input id="name" type="hidden"  value="{{single.id}}" name="name{{single.id}}{{date|date:"m-d"}}">
+                                                                <input id="name" type="hidden" value="{{date|date:'Y-m-d'}}" name="date{{single.id}}{{date|date:"m-d"}}">
+    
+            
+                                                                
+                                                                <input type="file" hidden class="description"   id="img{{single.id}}{{date|date:"m-d"}}" name="img{{single.id}}{{date|date:"m-d"}}" accept="image/*">
+                                                                
+                                                            
+                                                                <input type="hidden" class="description"  id="text{{single.id}}{{date|date:"m-d"}}" name="text{{single.id}}{{date|date:"m-d"}}" value="">
+                                                                
+                                                                <input type="hidden" value="{{single}}" id="emp_name{{single.id}}{{date|date:"m-d"}}">
+                                                                
+                                                                <div>
+                                                                    
+                                                                    <select class="form-select " id="tracker{{single.id}}{{date|date:"m-d"}}" name="tracker{{single.id}}{{date|date:"m-d"}}">
+                                                                        {% set ga_label = 'false' %}
+                                                                        {% for x in single.auditee.all %}
+                                                                        {% if date|date:"Y-m-d"  == x.date|date:"Y-m-d" and  x.criterion.tracker.id ==  criterion_m.0.tracker.id %}
+                                                                        {% set ga_label = 'true' %}                                                            
+                                                                            <option value="0"  class="others" selected>{{x}} </option>                                                                    
+                                                                        {% elif ga_label == 'false' and forloop.last %}
+                                                                        {% set ga_label = 'false' %}
+                                                                            <option value="none" >unaudited</option> 
+                                                                        {% endif %}
+        
+                                                                        {% empty %}
+                                                                        {% set ga_label = 'false' %}
+                                                                            <option value="none">unaudited</option>
+        
+                                                                        {% endfor %}
+                                    
+                                                                        {% for x  in criterion_m %}
+                                                        
+                                                                            <option value="{{x.id}}">{{x}} {{valueone}}</option>
+                                                                        {% endfor %}
+
+                                                                    
+                                                                    </select>
+                                                                
+                                                                </div>
+
+
+                                                                <div id="container{{single.id}}{{date|date:"m-d"}}">
+
+                                                                    <button type="button" name="button{{single.id}}{{date|date:"m-d"}}" class="btn btn-s btn-sm btn-primary fas fa-camera"></button>
+
+                                                                    
+                                                                </div>
+                                                                
+                                                            </td>
+
+                                                            
+
+                                                            {% endfor %}
+
+
+                                                        </tr>
+                                                        {% endfor %}
+                                                        
+
+                                                    </tbody>
+                                                </table>
+                                                <button type="submit"   class="btn mb-1 btn-success"><i class="fas fa-check"></i> Insert</button>
+                                            </form>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </main>
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row text-muted">
+                        <div class="col-8 text-start">
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Support</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Privacy</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Terms of Service</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Contact</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-4 text-end">
+                            <p class="mb-0">
+                                &copy; 2022 - <a href="dashboard-default.html" class="text-muted">MMCY Tech</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+            </div>
+        </div>
+
+        <svg width="0" height="0" style="position:absolute">
+		<defs>
+			<symbol viewBox="0 0 512 512" id="ion-ios-pulse-strong">
+				<path
+					d="M448 273.001c-21.27 0-39.296 13.999-45.596 32.999h-38.857l-28.361-85.417a15.999 15.999 0 0 0-15.183-10.956c-.112 0-.224 0-.335.004a15.997 15.997 0 0 0-15.049 11.588l-44.484 155.262-52.353-314.108C206.535 54.893 200.333 48 192 48s-13.693 5.776-15.525 13.135L115.496 306H16v31.999h112c7.348 0 13.75-5.003 15.525-12.134l45.368-182.177 51.324 307.94c1.229 7.377 7.397 11.92 14.864 12.344.308.018.614.028.919.028 7.097 0 13.406-3.701 15.381-10.594l49.744-173.617 15.689 47.252A16.001 16.001 0 0 0 352 337.999h51.108C409.973 355.999 427.477 369 448 369c26.511 0 48-22.492 48-49 0-26.509-21.489-46.999-48-46.999z">
+				</path>
+			</symbol>
+		</defs>
+	</svg>
+        <script src="{% static 'js/app.js' %}"></script>
+
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        $(".select2").each(function() {
+            $(this)
+                .wrap("<div class=\"position-relative\"></div>")
+                .select2({
+                    placeholder: "Projects",
+                    dropdownParent: $(this).parent()
+                });
+        });
+
+
+        $(".select3").each(function() {
+            $(this)
+                .wrap("<div class=\"position-relative\"></div>")
+                .select2({
+                    placeholder: "Tracker",
+                    dropdownParent: $(this).parent()
+                });
+        });
+
+
+        
+        $(document).ready(function() {
+            $('#datatables-clients').DataTable();
+        });
+
+
+
+    });
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+
+
+        var current = $('#select').val();
+        
+        
+
+    });
+
+
+    document.getElementById("append_data").addEventListener("click", function(){
+
+        
+        var uploadedImage =  document.getElementById('uploadedImage')
+        var uploadedImagesrc =  document.getElementById('readUrl')
+        var description  = document.getElementById('inputDescription').value
+        var current_choice  = document.getElementById('current_choice').value;
+        console.log(current_choice)
+
+        
+        var image_id  = current_choice.replace(/button/g, 'img')
+        var description_id  = current_choice.replace(/button/g, 'text')
+
+        $("#"+description_id).val(description);
+        
+
+        
+        image = document.getElementById(image_id)
+        
+         // Get a reference to the  file input
+        let fileInput1 = document.getElementById('readUrl');
+        
+        let file1 = fileInput1.files[0];
+
+
+        if (file1) {
+
+                // Create a new file object with the same data as file1
+        let file2 = new File([file1], file1.name, {
+            type: file1.type
+        });
+
+
+         // create a DataTransfer to get a FileList
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file2);
+        let fileInput2 = document.getElementById(image_id);
+        fileInput2.files = dataTransfer.files;
+        
+        
+          }
+    
+        //  <button type="button" name="button{{single.id}}{{date|date:"m-d"}}"  c
+        //lass="btn btn-s btn-sm btn-primary fas fa-eye"></button>
+        
+        let viewButton_id  = current_choice.replace(/button/g, 'viewbutton')
+        var button = document.getElementById(viewButton_id); 
+
+        if (button == null) {
+          // button with specified ID exists
+          const viewButton = document.createElement('button')
+          viewButton.className  = 'btn btn-s btn-sm btn-primary fas fa-eye'
+  
+          let viewButton_id  = current_choice.replace(/button/g, 'viewbutton') 
+          console.log(viewButton_id)
+          viewButton.setAttribute("name",viewButton_id)
+          viewButton.setAttribute("id",viewButton_id)
+          viewButton.setAttribute("type","button")
+  
+          viewButton.addEventListener("click", viewPreviewData);
+  
+          var container_id  = current_choice.replace(/button/g, 'container')
+          container = document.getElementById(container_id)
+          container.append(viewButton)
+          
+  
+        } 
+
+        
+    
+
+
+
+        $("#myModal").modal('hide');
+    });
+
+
+
+    function viewPreviewData(e){
+
+
+        let data_id = e.target.getAttribute('name')
+    
+        let image_id  = data_id.replace(/viewbutton/g, 'img')
+        let text_id  = data_id.replace(/viewbutton/g, 'text')
+        
+        let img = document.getElementById(image_id)
+
+        let paragraph  = document.getElementById('perviewText')
+        paragraph.innerText    =   document.getElementById(text_id).value
+    
+
+        console.log(img)
+
+        
+
+
+        const file = img.files[0];
+
+        // Create a new FileReader object
+        const reader = new FileReader();
+      
+        // Set a callback function to run when the file is loaded
+        reader.onload = () => {
+          // Set the image source to the result of the FileReader
+          document.getElementById('previewImage').src  = reader.result;
+
+        };
+        reader.readAsDataURL(file);
+
+
+
+        $("#showPreview").modal('show');
+    }
+
+    
+// filter button
+    document.getElementById("myBtn").addEventListener("click", function() {
+        //alert("Hello World!");
+
+        var criterion_id = $('#criterion').val();
+        var project_id = $('#project').val();
+        var position_id = $('#position').val();
+
+        
+
+        $("#projectx").val(project_id);
+        $("#positionx").val(position_id);
+        $("#criterionx").val(criterion_id);
+        
+
+
+        document.getElementById("criterion_display").innerHTML = $("#criterion option:selected").text();
+        document.getElementById("project_display").innerHTML = $("#project option:selected").text();
+        document.getElementById("position_display").innerHTML = $("#position option:selected").text();
+        //const $options = Array.from($select.options);
+        //const optionToSelect = $options.find(item => item.text ===text);
+
+        //console.log(criterion);
+
+        $.ajax({
+            url: '/audit/json/' + criterion_id + '/' + project_id + '/' + position_id + '/',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+
+
+                $('#json_div').empty();
+                $('#json_div').html(data.data);
+
+
+                $(document).ready(function() {
+                    $('#datatables-clients').DataTable();
+                });
+
+            }
+
+
+        });
+    });
+</script>
+
+
+<script>
+
+
+    //show modal 
+    $(document).ready(function(){
+
+
+        $(".btn-s").click(function(e){
+
+            button_id = e.target.name;
+            var employe_id = button_id.replace(/button/g, 'emp_name')
+            var tracker_id  = button_id.replace(/button/g, 'tracker')
+
+            var tracker_name = document.getElementById(tracker_id)
+            var employee_name = document.getElementById(employe_id)
+
+            var selectedOption = tracker_name.options[tracker_name.selectedIndex];
+            var selectedText = selectedOption.text;
+
+            console.log(employee_name)
+            console.log(selectedText)
+            $('#employee_name').text(employee_name.value);
+            $('#tracker_name').text(selectedOption.text);
+            $('#current_choice').val(button_id);
+            console.log(button_id)
+
+            
+            $("#myModal").modal('show');
+
+
+            
+
+        
+
+
+        });
+
+
+        $(".btn-h").click(function(){
+            $("#myModal").modal('hide');
+        });
+
+
+
+        var myModal = document.getElementById('showPreview');
+        var myBtn = document.getElementById('preview');
+        
+
+        $(".closePreview").click(function(){
+
+            $("#showPreview").modal('hide');
+        });
+        
+
+
+        
+
+        
+    });
+</script>
+
+
+<script>
+//read input from the upload feild and display 
+    document.getElementById('readUrl').addEventListener('change', function(){
+        if (this.files[0] ) {
+          var picture = new FileReader();
+          picture.readAsDataURL(this.files[0]);
+          picture.addEventListener('load', function(event) {
+            document.getElementById('uploadedImage').setAttribute('src', event.target.result);
+            document.getElementById('uploadedImage').style.display = 'block';
+          });
+        }
+      });
+</script>
+
+</html>

@@ -1,0 +1,30 @@
+<input type="file" id="fileInput1">
+<input type="file" id="fileInput2">
+<button onclick="copyFile()">Copy File</button>
+
+<script>
+    function copyFile() {
+        let fileInput1 = document.getElementById('fileInput1');
+        let file1 = fileInput1.files[0];
+
+        if (!file1) {
+            alert("Please select a file");
+            return;
+        }
+
+        // Create a new file object with the same data as file1
+        let file2 = new File([file1], file1.name, {
+            type: file1.type
+        });
+
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file2);
+        let fileInput2 = document.getElementById('fileInput2');
+        fileInput2.files = dataTransfer.files;
+
+
+
+
+    }
+</script>
