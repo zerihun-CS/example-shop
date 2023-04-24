@@ -273,6 +273,7 @@
 
                                                                 <div id="container{{single.id}}{{date|date:"m-d"}}">
 
+
                                                                     <button type="button" name="button{{single.id}}{{date|date:"m-d"}}" class="btn btn-s btn-sm btn-primary fas fa-camera"></button>
 
                                                                     
@@ -406,8 +407,6 @@
 
         $("#"+description_id).val(description);
         
-
-        
         image = document.getElementById(image_id)
         
          // Get a reference to the  file input
@@ -433,8 +432,8 @@
         
           }
     
-        //  <button type="button" name="button{{single.id}}{{date|date:"m-d"}}"  c
-        //lass="btn btn-s btn-sm btn-primary fas fa-eye"></button>
+        //  <button type="button" name="button{{single.id}}{{date|date:"m-d"}}"  
+        //class="btn btn-s btn-sm btn-primary fas fa-eye"></button>
         
         let viewButton_id  = current_choice.replace(/button/g, 'viewbutton')
         var button = document.getElementById(viewButton_id); 
@@ -481,18 +480,9 @@
 
         let paragraph  = document.getElementById('perviewText')
         paragraph.innerText    =   document.getElementById(text_id).value
-    
-
-        console.log(img)
-
-        
-
-
         const file = img.files[0];
-
         // Create a new FileReader object
         const reader = new FileReader();
-      
         // Set a callback function to run when the file is loaded
         reader.onload = () => {
           // Set the image source to the result of the FileReader
@@ -500,9 +490,6 @@
 
         };
         reader.readAsDataURL(file);
-
-
-
         $("#showPreview").modal('show');
     }
 

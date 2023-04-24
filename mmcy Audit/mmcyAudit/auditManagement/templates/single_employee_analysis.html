@@ -11,7 +11,7 @@
 <script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
-
+<script src="https://code.highcharts.com/highcharts.js"></script>
 <style>
     .fc-list-item-time {
         display:none;
@@ -36,7 +36,7 @@
 
                     <div class="header">
                         <h1 class="header-title">
-    Calender: 
+                                 Calender: 
                         </h1>
                         <nav aria-label="breadcrumb">
                             <div class="row">
@@ -46,7 +46,7 @@
         
                                             <div class="row">
 
-                                          
+                        
 
                                              <div class="col-xs-6 col-md-6 col-lg-4">
                                                 <div class="mb-3 mb-xl-0">
@@ -112,27 +112,7 @@
                                                     </div>
                             
                                                 </div>
-                                                <div class="col-xs-6 col-md-6 col-lg-2">
-                                                    <label class="form-label">Postion</label>
-                                                    <div class="mb-3">
-                            
-                                                        <select class="form-control select2" name="position" id="position" data-bs-toggle="select2">
-                                                        
-                                                        <optgroup label="Job Postion">
-                                                            <option value="0">All</option>
-                                                            {% for single in position  %}
-                                                            <option value="{{single.id}}">{{single}}</option>
-                                                            {% endfor %}
-                                                        
-                                                            
-                                                        </optgroup>
-                                                        
-                                                    
-                                                    </select>
-                                                        <label class="form-label badge bg-success mt-3" id="position_display">Position</label>
-                                                    </div>
-                            
-                                                </div>
+                                             
                             
                                                 <div class="col-xs-6 col-md-8 col-lg-2">
                                                     <label class="form-label">Action</label>
@@ -163,17 +143,27 @@
 
 								
 											<tr>
-												<th>auditives</th>
+										
 												<th>criterion</th>
 												<th>project</th>
 												<th>auditor</th>
 												<th>Date</th>
-												<th>Action</th>
+												
 											</tr>
 										</thead>
 									
 										<tbody>
-
+                                            
+                                            {% for single_emp  in audit_data  %}
+                                            <tr>
+                                            
+                                                <td>{{single_emp.criterion}} </td>
+                                                <td>{{single_emp.project}} </td>
+                                                <td>{{single_emp.auditor}} </td>
+                                                <td>{{single_emp.date}} </td>
+                                            </tr>
+                                            {% endfor %}
+                                            
 
 										</tbody>
 									</table>
@@ -181,8 +171,84 @@
                         </div>
                     </div>
 
+
+                    <div class-"card">
+                        {% block content %}
+                                            <div id="chart-container"></div>
+
+                        
+                        <script>
+                        // Define the chart data
+                        var data = {{ data|safe }};
+                        
+                        // Define the chart options
+                        var options = {
+                            chart: {
+                                type: 'column'
+                            },
+                            title: {
+                                text: 'Audits by Criterion'
+                            },
+                            xAxis: {
+                                categories: data.map(d => d.name),
+                                title: {
+                                    text: 'Criterion'
+                                }
+                            },
+                            yAxis: {
+                                title: {
+                                    text: 'Number of Audits'
+                                }
+                            },
+                            series: [{
+                                name: 'Audits',
+                                data: data.map(d => d.y)
+                            }]
+                        };
+
+                                // Create the chart
+                            Highcharts.chart('chart-container', options);
+                        </script>
+                        {% endblock %}
+I
+
+                    </div>
+
+
+
+
+                    <div class="card" >
+
+                        <div id="chart-container1"></div>
+
+                    </div>
+
+
+                    <div class="card" >
+
+                        <div id="pie-chart-container"></div>
+
+                    </div>
+
+                    <div id="stacked-bar-chart"></div>
+
+
+                    <div class="card" >
+
+                        <div id="stacked-bar-chart"></div>
+
+                    </div>
+
+
+
+
+
+
                 </div>
             </main>
+
+
+
             <footer class="footer">
                 <div class="container-fluid">
                     <div class="row text-muted">
@@ -224,6 +290,173 @@
 	</svg>
     
     <script src="{% static 'js/app.js' %}"></script>
+
+    
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script>
+    // Get data from table
+    var tableData = [];
+    $('#datatables-audits tbody tr').each(function() {
+        var rowData = [];
+        $(this).find('td').each(function() {
+            rowData.push($(this).text().trim());
+        });
+        tableData.push(rowData);
+    });
+
+    // Transform data for Highcharts
+    var seriesData = [];
+    tableData.forEach(function(row) {
+        var criterion = row[0];
+        var project = row[1];
+        var auditor = row[2];
+        var date = Date.parse(row[3]);
+        var matchingSeries = seriesData.find(function(series) { return series.name === project; });
+        if (matchingSeries) {
+            matchingSeries.data.push([date, matchingSeries.data.length]);
+        } else {
+            seriesData.push({
+                name: project,
+                data: [[date, 0]],
+            });
+        }
+    });
+
+    // Create chart
+    Highcharts.chart('chart-container1', {
+        chart: {
+            type: 'spline',
+        },
+        title: {
+            text: 'Audits by Project',
+        },
+        xAxis: {
+            type: 'datetime',
+            title: {
+                text: 'Date',
+            },
+        },
+        yAxis: {
+            title: {
+                text: 'Number of Audits',
+            },
+        },
+        series: seriesData,
+    });
+</script>
+
+
+
+
+<script>
+    
+    var data = [];
+    $('#datatables-audits tbody tr').each(function(){
+        var criterion = $(this).find('td:nth-child(1)').text().trim();
+        var project = $(this).find('td:nth-child(2)').text().trim();
+        var auditor = $(this).find('td:nth-child(3)').text().trim();
+        var date = $(this).find('td:nth-child(4)').text().trim();
+        data.push(project);
+    });
+    
+    // Count the occurrences of each project
+    var counts = {};
+    for (var i = 0; i < data.length; i++) {
+        var num = data[i];
+        counts[num] = counts[num] ? counts[num] + 1 : 1;
+    }
+    
+    // Convert the counts object to an array of name-value pairs
+    var pieData = [];
+    for (var name in counts) {
+        pieData.push({
+            name: name,
+            y: counts[name]
+        });
+    }
+    
+    // Create the pie chart
+    Highcharts.chart('pie-chart-container', {
+        chart: {
+            type: 'pie'
+        },
+        title: {
+            text: 'Projects'
+        },
+        series: [{
+            name: 'Count',
+            data: pieData
+        }]
+    });
+
+    
+</script>
+
+
+<script>
+// Extract data from table
+var table = document.getElementById("datatables-audits");
+var data = [];
+for (var i = 1; i < table.rows.length; i++) {
+  var row = table.rows[i];
+  var criterion = row.cells[0].innerText;
+  var project = row.cells[1].innerText;
+  var auditor = row.cells[2].innerText;
+  var date = row.cells[3].innerText;
+  data.push({ criterion, project, auditor, date });
+}
+
+// Group data by project and criterion
+var groups = {};
+data.forEach(function (item) {
+  if (!groups[item.project]) {
+    groups[item.project] = {};
+  }
+  if (!groups[item.project][item.criterion]) {
+    groups[item.project][item.criterion] = 0;
+  }
+  groups[item.project][item.criterion]++;
+});
+
+// Prepare data for chart
+var seriesData = [];
+Object.keys(groups).forEach(function (project) {
+  var data = [];
+  Object.keys(groups[project]).forEach(function (criterion) {
+    data.push(groups[project][criterion]);
+  });
+  seriesData.push({ name: project, data: data });
+});
+
+// Create chart
+Highcharts.chart("stacked-bar-chart", {
+  chart: {
+    type: "bar"
+  },
+  title: {
+    text: "Audits by Project and Criterion"
+  },
+  xAxis: {
+    categories: Object.keys(groups)
+  },
+  yAxis: {
+    title: {
+      text: "Number of Audits"
+    }
+  },
+  legend: {
+    reversed: true
+  },
+  plotOptions: {
+    series: {
+      stacking: "normal"
+    }
+  },
+  series: seriesData
+});
+
+</script>
 
     <script>
 
@@ -338,34 +571,12 @@
 				
 	
 				$('#datatables-audits').DataTable({
-					ajax: '/audit/get_account_manager_audits/',
-					columns: [
-					  { data: 'auditives' },
-					  { data: 'criterion' },
-					  { data: 'project' },
-					  { data: 'auditor' },
-					  {data:'date'},
-					  { 
-						 data: null,
-						 render: function(data, type, row) {
-							return '<button class="btn btn-primary view-audit" data-id="' + data.auditives + '">View</button>';
-						 },
-                         
-                         createdCell: function (td, cellData, rowData, rowIndex, colIndex) {
-                            $(td).on('click', '.view-audit', function () {
-                              var auditId = $(this).data('id');
-                              console.log('Audit ID:', auditId);
-                              // Perform action with auditId
-                              window.location.href = "get_employee_audits/"+auditId+'/';
-                            });
-                          }
-                          
-					  }
-					],
+					
 					dom: 'Bfrtip',
 					buttons: [
 					  {
 						 extend: 'pdfHtml5',
+                         messageTop: 'PDF created by PDFMake with Buttons for DataTables.',
                          exportOptions: {
                             columns: 'th:not(:last-child)'
                          },
@@ -398,7 +609,11 @@
 				 });
 				 
 				 // Add event listener for the "view" button
-				
+				 $('#datatables-audits').on('click', '.view-audit', function() {
+					var auditId = $(this).data('id');
+					// TODO: Implement your code to handle the event
+				 });
+			
 				 
 				 
 

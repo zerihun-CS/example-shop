@@ -12,9 +12,10 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.forms.models import model_to_dict
 from .helper import *
-
+from django.core.cache import cache
 from django.core.files import File
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count
 # Create your views here.
 
 def json_view(request,criterion_id=0,project_id=0,position_id=0):
@@ -79,14 +80,19 @@ def audit_view(request):
     criterion= Criterion.objects.all()
     position = Position.objects.all()
     project_id = position_id = criterion_id = 0
-  
+    employee_id_cache_key = 'employee_id_list'
+    employee_id_list = cache.get(employee_id_cache_key)
+    if employee_id_list is None:
+        # If not cached, perform the query and cache the result
+        employee_id_list = list(Employee.objects.all().values_list('id', flat=True))
+        cache.set(employee_id_cache_key, employee_id_list)
     if request.method == 'POST':
-        employee_id = Employee.objects.all().values_list('id',flat=True)
+
         project_id = request.POST.get('single_project')
         position_id = request.POST.get('single_position')
         criterion_id = request.POST.get('single_criterion')
         
-        for single_id in employee_id:
+        for single_id in employee_id_list:
           for single_date in date_list:
             
             value_id = request.POST.get('tracker'+str(single_id)+str(single_date.strftime("%m-%d")))
@@ -144,12 +150,10 @@ def audit_view_history(request,project_id,position_id,criterion_id):
       criterion_m = CriterionMeasurement.objects.filter(tracker__pk = int(criterion_id))
     else:
       criterion_m = CriterionMeasurement.objects.filter(tracker__criterion_name__contains = 'Interval')
-    if date:
-      start_date = date.start_date
-      end_date = date.ending_date
-    else:
-      start_date = datetime.today()
-      end_date = datetime.today() + timedelta(days=3)
+      
+    start_date = date.start_date if date else datetime.today()
+    end_date = date.ending_date if date else datetime.today() + timedelta(days=3)
+    date_list = [single_date for single_date in date_range(start_date, end_date)]
     # date range from the admin
     for single_date in date_range(start_date, end_date):
       date_list.append(single_date)
@@ -199,26 +203,113 @@ def get_account_manager_audits(request):
 
 
 @csrf_exempt
-def filter_account_manager_audits(request,criterion_id=0,project_id=0,position_id=0,start_date= None, end_date= None):
+def filter_account_manager_audits(request, criterion_id=0, project_id=0, position_id=0, start_date=None, end_date=None):
+    
     if request.method == 'GET':
-  
-      if position_id ==0 and project_id==0 :
-        audits = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval', notice= True)
-      elif position_id == 0:
-        audits = AccountManagerAudit.objects.filter(project__id = int(project_id), criterion__tracker__id = int(criterion_id) , notice= True)
-      elif project_id ==0:
-        audits = AccountManagerAudit.objects.filter(auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id)) 
-      elif position_id and project_id:
-        audits = AccountManagerAudit.objects.filter(project__id = int(project_id),auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id))
-      else:
-        audits = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval',)
+        
+        filters = {}
 
-      data = [{ 'auditives': str(audit.auditives),'criterion':  str(audit.criterion), 'project': str(audit.project), 'auditor': str(audit.auditor),  'date': audit.date.strftime('%Y-%m-%d')} for audit in audits]
-      return JsonResponse({'data': data})
-  
+        if position_id != 0:
+            filters['auditives__position__id'] = int(position_id)
+            print(position_id)
+        if project_id != 0:
+            filters['project__id'] = int(project_id)  
+            print(project_id)
+        if criterion_id != 0:
+            filters['criterion__tracker__id'] = int(criterion_id)
+            print(criterion_id)
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            print(start_date)
+            print(end_date)
+            filters['date__range'] = [start_date, end_date]
 
+        audits = AccountManagerAudit.objects.filter(**filters)
+      
+        data = [{ 'auditives': str(audit.auditives),'criterion':  str(audit.criterion), 'project': str(audit.project), 'auditor': str(audit.auditor),  'date': audit.date.strftime('%Y-%m-%d')} for audit in audits]
 
+        return JsonResponse({'data': data})
   
+@csrf_exempt
+def filter_account_manager_audits(request, criterion_id=0, project_id=0, position_id=0, start_date=None, end_date=None):
+    
+    if request.method == 'GET':
+        
+        filters = {}
+
+        if position_id != 0:
+            filters['auditives__position__id'] = int(position_id)
+            print(position_id)
+        if project_id != 0:
+            filters['project__id'] = int(project_id)  
+            print(project_id)
+        if criterion_id != 0:
+            filters['criterion__tracker__id'] = int(criterion_id)
+            print(criterion_id)
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            print(start_date)
+            print(end_date)
+            filters['date__range'] = [start_date, end_date]
+
+        audits = AccountManagerAudit.objects.filter(**filters)
+      
+        data = [{ 'auditives': str(audit.auditives),'criterion':  str(audit.criterion), 'project': str(audit.project), 'auditor': str(audit.auditor),  'date': audit.date.strftime('%Y-%m-%d')} for audit in audits]
+
+        return JsonResponse({'data': data})
+      
+      
+      
+def single_employee(request,auditid):
+  audit_counts = AccountManagerAudit.objects.values('added_at').annotate(count=Count('id'))
+  name_list = auditid.split(" ")
+  print(name_list)
+  audit_data  = AccountManagerAudit.objects.filter(auditives__first_name = name_list[0],auditives__last_name = name_list[1] )[0:200]
+  criterion1= Criterion.objects.all()
+  project  = Project.objects.filter(status = True)
+
+#  auditee_counts = AccountManagerAudit.objects.values('auditives__first_name', 'auditives__last_name').annotate(count=Count('id'))
+  criteria = Criterion.objects.all()
+  data = []
+  for criterion in criteria:
+        audits = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name=criterion.criterion_name,auditives__first_name = name_list[0],auditives__last_name = name_list[1] ).count()
+        data.append({
+            'name': criterion.criterion_name,
+            'y': audits
+        })
+  data ={'project':project,'criterion':criterion1,'audit_data':audit_data,  
+        'data': data}
+  return render(request, 'single_employee_analysis.html', data)
+  
+@csrf_exempt
+def filter_single_employee_audits(request, criterion_id=0, project_id=0, start_date=None, end_date=None):
+    
+    if request.method == 'GET':
+        
+        filters = {}
+
+        if project_id != 0:
+            filters['project__id'] = int(project_id)  
+            print(project_id)
+        if criterion_id != 0:
+            filters['criterion__tracker__id'] = int(criterion_id)
+            print(criterion_id)
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            print(start_date)
+            print(end_date)
+            filters['date__range'] = [start_date, end_date]
+
+        audits = AccountManagerAudit.objects.filter(**filters)
+      
+        data = [{ 'auditives': str(audit.auditives),'criterion':  str(audit.criterion), 'project': str(audit.project), 'auditor': str(audit.auditor),  'date': audit.date.strftime('%Y-%m-%d')} for audit in audits]
+
+        return JsonResponse({'data': data})
+      
+      
 def calender_view(request):
     criterion= Criterion.objects.all()
     position = Position.objects.all()
@@ -256,16 +347,23 @@ def calender_json(request):
 
 
 def calender_update_json(request,criterion_id=0,project_id=0,position_id=0):
-    if position_id ==0 and project_id==0 :
-      audit = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval', notice= True)
-    elif position_id == 0:
-        audit = AccountManagerAudit.objects.filter(project__id = int(project_id), criterion__tracker__id = int(criterion_id) , notice= True)
-    elif project_id ==0:
-      audit = AccountManagerAudit.objects.filter(auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id)) 
-    elif position_id and project_id:
-      audit = AccountManagerAudit.objects.filter(project__id = int(project_id),auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id))
-    else:
-      audit = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval', notice= True)
+    # if position_id ==0 and project_id==0 :
+    #   audit = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval', notice= True)
+    # elif position_id == 0:
+    #     audit = AccountManagerAudit.objects.filter(project__id = int(project_id), criterion__tracker__id = int(criterion_id) , notice= True)
+    # elif project_id ==0:
+    #   audit = AccountManagerAudit.objects.filter(auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id)) 
+    # elif position_id and project_id:
+    #   audit = AccountManagerAudit.objects.filter(project__id = int(project_id),auditives__position__id = int(position_id), notice= True,criterion__tracker__id = int(criterion_id))
+    # else:
+    #   audit = AccountManagerAudit.objects.filter(criterion__tracker__criterion_name__contains = 'Interval', notice= True)
+    filters = {
+        (0, 0): {'criterion__tracker__criterion_name__contains': 'Interval', 'notice': True},
+        (0, project_id): {'project__id': project_id, 'criterion__tracker__id': criterion_id, 'notice': True},
+        (position_id, 0): {'auditives__position__id': position_id, 'criterion__tracker__id': criterion_id, 'notice': True},
+        (position_id, project_id): {'project__id': project_id, 'auditives__position__id': position_id, 'criterion__tracker__id': criterion_id, 'notice': True},
+    }
+    audit = AccountManagerAudit.objects.filter(**filters.get((position_id, project_id), filters[(0, 0)]))
           
   
     event_arr = []
