@@ -10,16 +10,47 @@ from auditManagement.models import AccountManagerAudit
 from userManagement.models import Employee
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 # Create your views here.
-
+from django.db.models import Count
+import json
+import random
 
 @login_required
 def index(request):
    emp_count = Employee.objects.all().count()
    client_count = Client.objects.all().count()
    project_count = Project.objects.all().count() 
+   audits_data = AccountManagerAudit.objects.all().order_by('added_at')[:10]
    audit_count = AccountManagerAudit.objects.all().count() 
    
-   data={'emp_count':emp_count,'client_count':client_count,'project_count':project_count,'audit_count':audit_count}
+   project_counts = AccountManagerAudit.objects.filter(project__status = True).values('project__project_title').annotate(count=Count('project')).order_by('project__project_title')   
+   # Extract the project names and their count values
+   project_names = [project['project__project_title'] for project in project_counts]
+   project_counts = [project['count'] for project in project_counts]   
+   # Pass the data to the template
+
+   data = AccountManagerAudit.objects.values('notice').annotate(count=Count('id'))
+   chart_data = [{'name': 'True', 'y': 0}, {'name': 'False', 'y': 0}]
+   for item in data:
+        if item['notice']:
+            chart_data[0]['y'] = item['count']
+        else:
+            chart_data[1]['y'] = item['count']
+
+
+   audit_counts = AccountManagerAudit.objects.filter(project__status = True, notice = True).values('auditives__first_name', 'auditives__last_name').annotate(count=Count('id'))
+   auditive_names = [f"{count['auditives__first_name']} {count['auditives__last_name']}" for count in audit_counts]
+   audit_counts = [count['count'] for count in audit_counts]
+   data = []
+   for i in range(len(auditive_names)):
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        hex_color = '#{:02x}{:02x}{:02x}'.format(*color)
+        data.append({
+            'name': auditive_names[i],
+            'value': audit_counts[i],
+            'color':hex_color
+        })
+        
+   data={'emp_count':emp_count,'client_count':client_count,'project_count':project_count,'audit_count':audit_count,'chart_data': chart_data,'project_names': json.dumps(project_names) ,'project_counts':json.dumps(project_counts),'data': data,'audits_data':audits_data }
    
    return render(request, "index.html", data)
 
